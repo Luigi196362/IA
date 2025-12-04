@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual Environment
+env/
+venv/
+.env
+
+# Dataset
+Dataset/
+Dataset.zip
+
+# Logs and Results
+log*.txt
+training_results.png
+
+# Temporary files
+temp_img.jpg
+
+# IDE
+.vscode/
+.idea/

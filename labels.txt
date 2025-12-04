@@ -1,0 +1,6 @@
+Animales
+Autos
+Comida
+Motos
+Plantas
+Ropa
