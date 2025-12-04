@@ -4,7 +4,10 @@ import numpy as np
 import tensorflow as tf
 from flask import Flask, request, jsonify
 from tensorflow.keras.models import load_model
-from tensorflow.keras.utils import load_img, img_to_array
+from tensorflow.keras.utils import img_to_array
+from PIL import Image
+import io
+import sys
 
 app = Flask(__name__)
 
@@ -67,34 +70,36 @@ def predict():
 
     if file:
         try:
-            # Guardar temporalmente la imagen
-            temp_path = os.path.join('temp_img.jpg')
-            file.save(temp_path)
-
-            # Preprocesamiento
-            img = load_img(temp_path, target_size=IMG_SIZE)
+            # Procesamiento en memoria
+            print(f"Recibida imagen: {file.filename}", file=sys.stderr)
+            image_bytes = file.read()
+            img = Image.open(io.BytesIO(image_bytes))
+            
+            if img.mode != 'RGB':
+                img = img.convert('RGB')
+                
+            img = img.resize(IMG_SIZE)
             img_array = img_to_array(img)
             img_array = tf.expand_dims(img_array, 0) # Crear un lote (batch)
 
             # Predicción
+            print("Realizando predicción...", file=sys.stderr)
             predictions = model.predict(img_array)
             score = predictions[0]
             
             predicted_class = class_names[np.argmax(score)]
             confidence = 100 * np.max(score)
-
-            # Limpiar archivo temporal
-            if os.path.exists(temp_path):
-                os.remove(temp_path)
+            
+            print(f"Predicción: {predicted_class} ({confidence:.2f}%)", file=sys.stderr)
 
             return jsonify({
                 'class': predicted_class,
                 'confidence': float(confidence)
             })
         except Exception as e:
-            # Asegurar limpieza en caso de error
-            if os.path.exists(temp_path):
-                os.remove(temp_path)
+            print(f"Error procesando imagen: {e}", file=sys.stderr)
+            import traceback
+            traceback.print_exc()
             return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
